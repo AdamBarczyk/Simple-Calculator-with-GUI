@@ -5,19 +5,31 @@ import java.awt.*;
 public class Kalk implements ActionListener
 {
     JTextField t1;
+    /**
+     * tu tworzysz sobie zmienne typu JButton, które w przyszłości mogą wskazywać
+     * na jakieś rzeczywiste obiekty klasy JButton, natomiast na razie wskazują na nic (null)
+     * **/
     JButton b1,b2,b3,b4,b5,b6,b7,b8,b9,b0;
+    /**
+     * tu tworzysz zmienną typu JButton[]
+     * i inicjalizujesz ją tak naprawdę w ten sposób:
+     *      JButton[] numericButtons = new JButton[] {b1,b2,b3,b4,b5,b6,b7,b8,b9};,
+     * a wybrana przez Ciebie notacja to po prostu 'syntax sugar'.
+     *
+     * W związku z tym aktualnie w tej tablicy jest 9 null'i.
+     * **/
     JButton[] numericButtons = {b1,b2,b3,b4,b5,b6,b7,b8,b9};
     JButton bplus,bminus,brow,bdot;
 
-    double x,buf;
-    String mathOperation="null";
+    double x, buf;
+    String mathOperation = "null";
     boolean dotted = false;
 
     public void actionPerformed(ActionEvent e)
     {
         Object target = e.getSource();
 
-        if(target==numericButtons[0] || target==b2 || target==b3 || target==b4 || target==b5 ||
+        if (target==numericButtons[0] || target==b2 || target==b3 || target==b4 || target==b5 ||
                 target==b6 || target==b7 || target==b8 || target==b9 || target==b0)
         {
             t1.setText(t1.getText()+((JButton)target).getText());
@@ -94,6 +106,12 @@ public class Kalk implements ActionListener
                 posY++;
             }
 
+            /**
+             * tu do tablicy podstawiasz referencje na rzeczywiste obiekty JButton,
+             * bo to zwraca operator new, zatem w tablicy juz nie ma null'i.
+             * Mimo to zmienne b1, ..., b9 dalej pokazują na nulle, bo przecież nikt ich nie ustawiał
+             * na coś innego, dlatego apka działa jak pisałeś.
+             * **/
 
             numericButtons[i]=new JButton(String.valueOf(i+1));
             numericButtons[i].addActionListener(this);
