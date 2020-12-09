@@ -7,7 +7,7 @@ public class Kalk implements ActionListener, KeyListener
     JTextField t1;
     JButton[] numericButtons = new JButton[9];
     JButton b0;
-    JButton bplus,bminus,bmul,bdiv,bpercent,bsqrt,bpow,bequal,bdot;
+    JButton bplus,bminus,bmul,bdiv,bpercent,bsqrt,bpow,bequal,bdot,bclear;
 
     double x, buf;
     String mathOperation = "null";
@@ -73,7 +73,12 @@ public class Kalk implements ActionListener, KeyListener
                 dotted = true;
             }
         }
-
+        else if(target == bclear)
+        {
+            buf=0;
+            t1.setText("0");
+            t1.requestFocus();
+        }
         else if(target==bplus || target==bminus || target == bmul || target == bdiv || target == bpercent ||
                 target == bpow)
         {
@@ -149,13 +154,14 @@ public class Kalk implements ActionListener, KeyListener
         gbc.fill=GridBagConstraints.HORIZONTAL;
         c.setLayout(gbl);
 
+        f.addKeyListener(this);
 
         /**
          * Initializing text field
          */
         t1=new JTextField(15);
         t1.setEditable(false);
-        t1.addActionListener(this);
+        //t1.addActionListener(this);
         t1.setHorizontalAlignment(JTextField.RIGHT);
         gbc.gridx=0;
         gbc.gridy=0;
@@ -194,6 +200,20 @@ public class Kalk implements ActionListener, KeyListener
         /**
          * Initializing the rest of buttons
          */
+
+        //button CE (clear)
+        bclear = new JButton("C");
+        bclear.setToolTipText("clear");
+        bclear.addActionListener(this);
+        bclear.setFocusable(false);
+        gbc.gridx=2;
+        gbc.gridy=4;
+        gbc.gridwidth=1;
+        gbc.ipadx=0;
+        gbc.ipady=0;
+        gbc.insets=new Insets(5,5,5,0);
+        gbl.setConstraints(bclear,gbc);
+        c.add(bclear);
 
         //button 0
         b0=new JButton("0");
@@ -324,12 +344,12 @@ public class Kalk implements ActionListener, KeyListener
         bequal.addActionListener(this);
         bequal.setFocusable(false);
         bequal.setToolTipText("wykonaj działanie");
-        gbc.gridx=2;
+        gbc.gridx=4;
         gbc.gridy=4;
         gbc.gridwidth=1;
         gbc.ipadx=0;
         gbc.ipady=0;
-        gbc.insets=new Insets(5,5,5,0);
+        gbc.insets=new Insets(5,5,5,5);
         gbl.setConstraints(bequal,gbc);
         c.add(bequal);
 
