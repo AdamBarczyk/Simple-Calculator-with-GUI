@@ -27,7 +27,6 @@ public class Kalk implements ActionListener, KeyListener
 
     public void keyPressed(KeyEvent e)
     {
-        System.out.println("dupa");
         int key = e.getKeyCode();
 
         if(key == KeyEvent.VK_0) t1.setText(t1.getText()+"0");
