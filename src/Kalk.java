@@ -2,40 +2,68 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
 
-public class Kalk implements ActionListener
+public class Kalk implements ActionListener, KeyListener
 {
     JTextField t1;
-    /**
-     * tu tworzysz sobie zmienne typu JButton, które w przyszłości mogą wskazywać
-     * na jakieś rzeczywiste obiekty klasy JButton, natomiast na razie wskazują na nic (null)
-     * **/
-    JButton b1,b2,b3,b4,b5,b6,b7,b8,b9,b0;
-    /**
-     * tu tworzysz zmienną typu JButton[]
-     * i inicjalizujesz ją tak naprawdę w ten sposób:
-     *      JButton[] numericButtons = new JButton[] {b1,b2,b3,b4,b5,b6,b7,b8,b9};,
-     * a wybrana przez Ciebie notacja to po prostu 'syntax sugar'.
-     *
-     * W związku z tym aktualnie w tej tablicy jest 9 null'i.
-     * **/
-    JButton[] numericButtons = {b1,b2,b3,b4,b5,b6,b7,b8,b9};
-    JButton bplus,bminus,brow,bdot;
+    JButton[] numericButtons = new JButton[9];
+    JButton b0;
+    JButton bplus,bminus,bmul,bdiv,bpercent,bsqrt,bpow,bequal,bdot;
 
     double x, buf;
     String mathOperation = "null";
     boolean dotted = false;
+    boolean mathError = false;
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    public void keyPressed(KeyEvent e)
+    {
+        int key = e.getKeyCode();
+
+        if(key == KeyEvent.VK_0) t1.setText(t1.getText()+"0");
+        if(key == KeyEvent.VK_1) t1.setText(t1.getText()+"1");
+        if(key == KeyEvent.VK_2) t1.setText(t1.getText()+"2");
+        if(key == KeyEvent.VK_3) t1.setText(t1.getText()+"3");
+        if(key == KeyEvent.VK_4) t1.setText(t1.getText()+"4");
+        if(key == KeyEvent.VK_5) t1.setText(t1.getText()+"5");
+        if(key == KeyEvent.VK_6) t1.setText(t1.getText()+"6");
+        if(key == KeyEvent.VK_7) t1.setText(t1.getText()+"7");
+        if(key == KeyEvent.VK_8) t1.setText(t1.getText()+"8");
+        if(key == KeyEvent.VK_9) t1.setText(t1.getText()+"9");
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
+    }
 
     public void actionPerformed(ActionEvent e)
     {
         Object target = e.getSource();
 
-        if (target==numericButtons[0] || target==b2 || target==b3 || target==b4 || target==b5 ||
-                target==b6 || target==b7 || target==b8 || target==b9 || target==b0)
+        /**
+         * Check if numeric button (1-9) has been pressed
+         */
+        for (JButton button : numericButtons)
+        {
+            if (target == button)
+            {
+                t1.setText(t1.getText()+((JButton)target).getText());
+                t1.requestFocus();
+            }
+        }
+
+        /**
+         * Check if numeric button (0) or operator button has been pressed
+         */
+        if(target == b0)
         {
             t1.setText(t1.getText()+((JButton)target).getText());
             t1.requestFocus();
         }
-
         else if(target==bdot)
         {
             if(!dotted)
@@ -46,10 +74,15 @@ public class Kalk implements ActionListener
             }
         }
 
-        else if(target==bplus || target==bminus)
+        else if(target==bplus || target==bminus || target == bmul || target == bdiv || target == bpercent ||
+                target == bpow)
         {
             if(target==bplus) mathOperation="bplus";
             if(target==bminus) mathOperation="bminus";
+            if(target==bmul) mathOperation="bmul";
+            if(target==bdiv) mathOperation="bdiv";
+            if(target==bpercent) mathOperation="bpercent";
+            if(target==bpow) mathOperation="bpow";
 
             buf=Double.parseDouble(t1.getText());
             t1.setText("");
@@ -57,13 +90,46 @@ public class Kalk implements ActionListener
             dotted = false;
         }
 
-        else if(target==brow || target==t1)
+        else if(target==bsqrt)
+        {
+            buf = Double.parseDouble(t1.getText());
+
+            //sqrt of x<0 doesn't exist
+            if(buf>=0){
+                x=Math.sqrt(buf);
+                t1.setText(Double.toString(x));
+            }
+            else{
+                t1.setText("Error");
+            }
+            t1.requestFocus();
+        }
+
+        else if(target== bequal || target==t1)
         {
             x=Double.parseDouble(t1.getText());
             if(mathOperation.equals("bplus")) x=buf+x;
             if(mathOperation.equals("bminus")) x=buf-x;
-            t1.setText(Double.toString(x));
-            t1.requestFocus();
+            if(mathOperation.equals("bmul")) x=buf*x;
+            if(mathOperation.equals("bpercent")) x=buf*x/100;
+            if(mathOperation.equals("bpow")) x=Math.pow(buf,x);
+            if(mathOperation.equals("bdiv")){
+
+                //Dividing by zero
+                if(x!=0){
+                    x=buf/x;
+                }
+                else{
+                    mathError = true;
+                    t1.setText("Error");
+                    t1.requestFocus();
+                }
+            }
+            if(!mathError)
+            {
+                t1.setText(Double.toString(x));
+                t1.requestFocus();
+            }
         }
     }
 
@@ -84,8 +150,11 @@ public class Kalk implements ActionListener
         c.setLayout(gbl);
 
 
-
+        /**
+         * Initializing text field
+         */
         t1=new JTextField(15);
+        t1.setEditable(false);
         t1.addActionListener(this);
         t1.setHorizontalAlignment(JTextField.RIGHT);
         gbc.gridx=0;
@@ -97,6 +166,9 @@ public class Kalk implements ActionListener
         gbl.setConstraints(t1,gbc);
         c.add(t1);
 
+        /**
+         * Initializing buttons for numbers 1-9
+         */
         int posX;
         int posY = 0;
         for(int i=0; i<9; i++)
@@ -105,13 +177,6 @@ public class Kalk implements ActionListener
             if((i%3) == 0){
                 posY++;
             }
-
-            /**
-             * tu do tablicy podstawiasz referencje na rzeczywiste obiekty JButton,
-             * bo to zwraca operator new, zatem w tablicy juz nie ma null'i.
-             * Mimo to zmienne b1, ..., b9 dalej pokazują na nulle, bo przecież nikt ich nie ustawiał
-             * na coś innego, dlatego apka działa jak pisałeś.
-             * **/
 
             numericButtons[i]=new JButton(String.valueOf(i+1));
             numericButtons[i].addActionListener(this);
@@ -127,114 +192,10 @@ public class Kalk implements ActionListener
         }
 
         /**
-        b1=new JButton("1");
-        b1.addActionListener(this);
-        b1.setFocusable(false);
-        gbc.gridx=0;
-        gbc.gridy=1;
-        gbc.gridwidth=1;
-        gbc.ipadx=0;
-        gbc.ipady=0;
-        gbc.insets=new Insets(5,5,0,0);
-        gbl.setConstraints(b1,gbc);
-        c.add(b1);
+         * Initializing the rest of buttons
+         */
 
-        b2=new JButton("2");
-        b2.addActionListener(this);
-        b2.setFocusable(false);
-        gbc.gridx=1;
-        gbc.gridy=1;
-        gbc.gridwidth=1;
-        gbc.ipadx=0;
-        gbc.ipady=0;
-        gbc.insets=new Insets(5,5,0,0);
-        gbl.setConstraints(b2,gbc);
-        c.add(b2);
-
-        b3=new JButton("3");
-        b3.addActionListener(this);
-        b3.setFocusable(false);
-        gbc.gridx=2;
-        gbc.gridy=1;
-        gbc.gridwidth=1;
-        gbc.ipadx=0;
-        gbc.ipady=0;
-        gbc.insets=new Insets(5,5,0,0);
-        gbl.setConstraints(b3,gbc);
-        c.add(b3);
-
-        b4=new JButton("4");
-        b4.addActionListener(this);
-        b4.setFocusable(false);
-        gbc.gridx=0;
-        gbc.gridy=2;
-        gbc.gridwidth=1;
-        gbc.ipadx=0;
-        gbc.ipady=0;
-        gbc.insets=new Insets(5,5,0,0);
-        gbl.setConstraints(b4,gbc);
-        c.add(b4);
-
-        b5=new JButton("5");
-        b5.addActionListener(this);
-        b5.setFocusable(false);
-        gbc.gridx=1;
-        gbc.gridy=2;
-        gbc.gridwidth=1;
-        gbc.ipadx=0;
-        gbc.ipady=0;
-        gbc.insets=new Insets(5,5,0,0);
-        gbl.setConstraints(b5,gbc);
-        c.add(b5);
-
-        b6=new JButton("6");
-        b6.addActionListener(this);
-        b6.setFocusable(false);
-        gbc.gridx=2;
-        gbc.gridy=2;
-        gbc.gridwidth=1;
-        gbc.ipadx=0;
-        gbc.ipady=0;
-        gbc.insets=new Insets(5,5,0,0);
-        gbl.setConstraints(b6,gbc);
-        c.add(b6);
-
-        b7=new JButton("7");
-        b7.addActionListener(this);
-        b7.setFocusable(false);
-        gbc.gridx=0;
-        gbc.gridy=3;
-        gbc.gridwidth=1;
-        gbc.ipadx=0;
-        gbc.ipady=0;
-        gbc.insets=new Insets(5,5,0,0);
-        gbl.setConstraints(b7,gbc);
-        c.add(b7);
-
-        b8=new JButton("8");
-        b8.addActionListener(this);
-        b8.setFocusable(false);
-        gbc.gridx=1;
-        gbc.gridy=3;
-        gbc.gridwidth=1;
-        gbc.ipadx=0;
-        gbc.ipady=0;
-        gbc.insets=new Insets(5,5,0,0);
-        gbl.setConstraints(b8,gbc);
-        c.add(b8);
-
-        b9=new JButton("9");
-        b9.addActionListener(this);
-        b9.setFocusable(false);
-        gbc.gridx=2;
-        gbc.gridy=3;
-        gbc.gridwidth=1;
-        gbc.ipadx=0;
-        gbc.ipady=0;
-        gbc.insets=new Insets(5,5,0,0);
-        gbl.setConstraints(b9,gbc);
-        c.add(b9);
-        */
+        //button 0
         b0=new JButton("0");
         b0.addActionListener(this);
         b0.setFocusable(false);
@@ -247,6 +208,7 @@ public class Kalk implements ActionListener
         gbl.setConstraints(b0,gbc);
         c.add(b0);
 
+        //button dot (.)
         bdot=new JButton(".");
         bdot.addActionListener(this);
         bdot.setFocusable(false);
@@ -259,8 +221,7 @@ public class Kalk implements ActionListener
         gbl.setConstraints(bdot,gbc);
         c.add(bdot);
 
-
-
+        //button plus (+)
         bplus=new JButton("+");
         bplus.addActionListener(this);
         bplus.setFocusable(false);
@@ -274,6 +235,7 @@ public class Kalk implements ActionListener
         gbl.setConstraints(bplus,gbc);
         c.add(bplus);
 
+        //button minus (-)
         bminus=new JButton("-");
         bminus.addActionListener(this);
         bminus.setFocusable(false);
@@ -287,20 +249,89 @@ public class Kalk implements ActionListener
         gbl.setConstraints(bminus,gbc);
         c.add(bminus);
 
+        //button multiply (*)
+        bmul=new JButton("*");
+        bmul.addActionListener(this);
+        bmul.setFocusable(false);
+        bmul.setToolTipText("mnozenie");
+        gbc.gridx=3;
+        gbc.gridy=2;
+        gbc.gridwidth=1;
+        gbc.ipadx=0;
+        gbc.ipady=0;
+        gbc.insets=new Insets(5,5,0,0);
+        gbl.setConstraints(bmul,gbc);
+        c.add(bmul);
 
+        //button divide (/)
+        bdiv=new JButton("/");
+        bdiv.addActionListener(this);
+        bdiv.setFocusable(false);
+        bdiv.setToolTipText("mnozenie");
+        gbc.gridx=4;
+        gbc.gridy=2;
+        gbc.gridwidth=1;
+        gbc.ipadx=0;
+        gbc.ipady=0;
+        gbc.insets=new Insets(5,5,0,5);
+        gbl.setConstraints(bdiv,gbc);
+        c.add(bdiv);
 
-        brow=new JButton("=");
-        brow.addActionListener(this);
-        brow.setFocusable(false);
-        brow.setToolTipText("wykonaj działanie");
+        //button percent (%)
+        bpercent=new JButton("%");
+        bpercent.addActionListener(this);
+        bpercent.setFocusable(false);
+        bpercent.setToolTipText("percent");
+        gbc.gridx=3;
+        gbc.gridy=4;
+        gbc.gridwidth=1;
+        gbc.ipadx=0;
+        gbc.ipady=0;
+        gbc.insets=new Insets(5,5,5,0);
+        gbl.setConstraints(bpercent,gbc);
+        c.add(bpercent);
+
+        //button sqrt (√)
+        bsqrt=new JButton("√");
+        bsqrt.addActionListener(this);
+        bsqrt.setFocusable(false);
+        bsqrt.setToolTipText("sqrt");
+        gbc.gridx=4;
+        gbc.gridy=3;
+        gbc.gridwidth=1;
+        gbc.ipadx=0;
+        gbc.ipady=0;
+        gbc.insets=new Insets(5,5,0,5);
+        gbl.setConstraints(bsqrt,gbc);
+        c.add(bsqrt);
+
+        //button power (^)
+        bpow=new JButton("^");
+        bpow.addActionListener(this);
+        bpow.setFocusable(false);
+        bpow.setToolTipText("sqrt");
+        gbc.gridx=3;
+        gbc.gridy=3;
+        gbc.gridwidth=1;
+        gbc.ipadx=0;
+        gbc.ipady=0;
+        gbc.insets=new Insets(5,5,0,0);
+        gbl.setConstraints(bpow,gbc);
+        c.add(bpow);
+
+        //button equal (=)
+        bequal=new JButton("=");
+        bequal.addActionListener(this);
+        bequal.setFocusable(false);
+        bequal.setToolTipText("wykonaj działanie");
         gbc.gridx=2;
         gbc.gridy=4;
         gbc.gridwidth=1;
         gbc.ipadx=0;
         gbc.ipady=0;
         gbc.insets=new Insets(5,5,5,0);
-        gbl.setConstraints(brow,gbc);
-        c.add(brow);
+        gbl.setConstraints(bequal,gbc);
+        c.add(bequal);
 
 
 
