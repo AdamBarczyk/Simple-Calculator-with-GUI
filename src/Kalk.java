@@ -1,6 +1,11 @@
+import javax.imageio.IIOException;
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 public class Kalk implements ActionListener, KeyListener
 {
@@ -8,8 +13,10 @@ public class Kalk implements ActionListener, KeyListener
     JButton[] numericButtons = new JButton[9];
     JButton b0;
     JButton bplus,bminus,bmul,bdiv,bpercent,bsqrt,bpow,bequal,bdot,bclear;
+    JButton memPlus,memMinus,memClear,memLoad;
+    String stringToHistory="";
 
-    double x, buf;
+    double x, buf, memory, percentBuf;
     String mathOperation = "null";
     boolean dotted = false;
     boolean mathError = false;
@@ -21,6 +28,7 @@ public class Kalk implements ActionListener, KeyListener
 
     public void keyPressed(KeyEvent e)
     {
+        System.out.println("dupa");
         int key = e.getKeyCode();
 
         if(key == KeyEvent.VK_0) t1.setText(t1.getText()+"0");
@@ -53,6 +61,7 @@ public class Kalk implements ActionListener, KeyListener
             {
                 t1.setText(t1.getText()+((JButton)target).getText());
                 t1.requestFocus();
+                stringToHistory += t1.getText().substring(t1.getText().length()-1);
             }
         }
 
@@ -63,6 +72,7 @@ public class Kalk implements ActionListener, KeyListener
         {
             t1.setText(t1.getText()+((JButton)target).getText());
             t1.requestFocus();
+            stringToHistory += "0";
         }
         else if(target==bdot)
         {
@@ -70,27 +80,43 @@ public class Kalk implements ActionListener, KeyListener
             {
                 t1.setText(t1.getText()+((JButton)target).getText());
                 t1.requestFocus();
+                stringToHistory += ".";
                 dotted = true;
             }
         }
         else if(target == bclear)
         {
             buf=0;
-            t1.setText("0");
+            t1.setText("");
             t1.requestFocus();
         }
         else if(target==bplus || target==bminus || target == bmul || target == bdiv || target == bpercent ||
                 target == bpow)
         {
-            if(target==bplus) mathOperation="bplus";
-            if(target==bminus) mathOperation="bminus";
-            if(target==bmul) mathOperation="bmul";
-            if(target==bdiv) mathOperation="bdiv";
-            if(target==bpercent) mathOperation="bpercent";
-            if(target==bpow) mathOperation="bpow";
+            if(target==bplus) {mathOperation="bplus"; stringToHistory += "+";}
+            if(target==bminus) {mathOperation="bminus"; stringToHistory += "-";}
+            if(target==bmul) {mathOperation="bmul"; stringToHistory += "*";}
+            if(target==bdiv) {mathOperation="bdiv"; stringToHistory += "/";}
+            if(target==bpercent) {mathOperation="bpercent"; stringToHistory += "%";}
+            if(target==bpow) {mathOperation="bpow"; stringToHistory += "^";}
 
-            buf=Double.parseDouble(t1.getText());
-            t1.setText("");
+            if(target==bpercent) {
+                /**
+                 * first number from user is stored under 'percentBuf' variable.
+                 * percent computed into double value is stored under 'percentValue' variable
+                 * 100*40% = 100*0.4 = percentBuf*percentValue(it's computing after pressing button(=))
+                 *
+                 * 'percentValue' is a mathematical expression of %: 40%=0.4
+                 */
+                percentBuf = buf;
+                buf=Double.parseDouble(t1.getText());
+                double percentValue = Double.parseDouble(t1.getText())/100;
+                t1.setText(Double.toString(percentValue));
+            }
+            else{
+                buf=Double.parseDouble(t1.getText());
+                t1.setText("");
+            }
             t1.requestFocus();
             dotted = false;
         }
@@ -103,11 +129,25 @@ public class Kalk implements ActionListener, KeyListener
             if(buf>=0){
                 x=Math.sqrt(buf);
                 t1.setText(Double.toString(x));
+                stringToHistory = "√" + stringToHistory + "=" + x;
             }
             else{
                 t1.setText("Error");
+                stringToHistory += "=Error: sqrt(x<0)";
             }
             t1.requestFocus();
+
+            //save operation to history file
+            try {
+                FileWriter fw = new FileWriter("history.txt", true);
+                BufferedWriter file = new BufferedWriter(fw);
+
+                System.out.println(stringToHistory);
+                file.write(stringToHistory);
+                file.close();
+            }catch(IOException exc) {
+
+            }
         }
 
         else if(target== bequal || target==t1)
@@ -116,7 +156,7 @@ public class Kalk implements ActionListener, KeyListener
             if(mathOperation.equals("bplus")) x=buf+x;
             if(mathOperation.equals("bminus")) x=buf-x;
             if(mathOperation.equals("bmul")) x=buf*x;
-            if(mathOperation.equals("bpercent")) x=buf*x/100;
+            if(mathOperation.equals("bpercent")) x=percentBuf*x;
             if(mathOperation.equals("bpow")) x=Math.pow(buf,x);
             if(mathOperation.equals("bdiv")){
 
@@ -128,13 +168,49 @@ public class Kalk implements ActionListener, KeyListener
                     mathError = true;
                     t1.setText("Error");
                     t1.requestFocus();
+                    stringToHistory += "="+t1.getText()+"\n";
                 }
             }
             if(!mathError)
             {
                 t1.setText(Double.toString(x));
                 t1.requestFocus();
+                stringToHistory += "="+t1.getText()+"\n";
             }
+
+            //save operation to history file
+            try {
+                FileWriter fw = new FileWriter("history.txt", true);
+                BufferedWriter file = new BufferedWriter(fw);
+
+                System.out.println(stringToHistory);
+                file.write(stringToHistory);
+                file.close();
+                stringToHistory = "";
+            }catch(IOException exc) {
+
+            }
+        }
+        /**
+         * Calculator memory handling
+         */
+        else if(target == memClear)
+        {
+            memory=0;
+        }
+        else if(target == memLoad)
+        {
+            t1.setText(Double.toString(memory));
+        }
+        else if(target == memPlus)
+        {
+            x=Double.parseDouble(t1.getText());
+            memory=memory+x;
+        }
+        else if(target == memMinus)
+        {
+            x=Double.parseDouble(t1.getText());
+            memory=memory-x;
         }
     }
 
@@ -265,7 +341,7 @@ public class Kalk implements ActionListener, KeyListener
         gbc.gridwidth=1;
         gbc.ipadx=0;
         gbc.ipady=0;
-        gbc.insets=new Insets(5,5,0,5);
+        gbc.insets=new Insets(5,5,0,0);
         gbl.setConstraints(bminus,gbc);
         c.add(bminus);
 
@@ -293,7 +369,7 @@ public class Kalk implements ActionListener, KeyListener
         gbc.gridwidth=1;
         gbc.ipadx=0;
         gbc.ipady=0;
-        gbc.insets=new Insets(5,5,0,5);
+        gbc.insets=new Insets(5,5,0,0);
         gbl.setConstraints(bdiv,gbc);
         c.add(bdiv);
 
@@ -321,7 +397,7 @@ public class Kalk implements ActionListener, KeyListener
         gbc.gridwidth=1;
         gbc.ipadx=0;
         gbc.ipady=0;
-        gbc.insets=new Insets(5,5,0,5);
+        gbc.insets=new Insets(5,5,0,0);
         gbl.setConstraints(bsqrt,gbc);
         c.add(bsqrt);
 
@@ -349,9 +425,65 @@ public class Kalk implements ActionListener, KeyListener
         gbc.gridwidth=1;
         gbc.ipadx=0;
         gbc.ipady=0;
-        gbc.insets=new Insets(5,5,5,5);
+        gbc.insets=new Insets(5,5,5,0);
         gbl.setConstraints(bequal,gbc);
         c.add(bequal);
+
+        //button memoryClear (MC)
+        memClear=new JButton("MC");
+        memClear.addActionListener(this);
+        memClear.setFocusable(false);
+        memClear.setToolTipText("wyczysc pamiec");
+        gbc.gridx=5;
+        gbc.gridy=1;
+        gbc.gridwidth=1;
+        gbc.ipadx=0;
+        gbc.ipady=0;
+        gbc.insets=new Insets(5,10,0,5);
+        gbl.setConstraints(memClear,gbc);
+        c.add(memClear);
+
+        //button memoryLoad (MR)
+        memLoad=new JButton("MR");
+        memLoad.addActionListener(this);
+        memLoad.setFocusable(false);
+        memLoad.setToolTipText("Wycofaj z pamieci");
+        gbc.gridx=5;
+        gbc.gridy=2;
+        gbc.gridwidth=1;
+        gbc.ipadx=0;
+        gbc.ipady=0;
+        gbc.insets=new Insets(5,10,0,5);
+        gbl.setConstraints(memLoad,gbc);
+        c.add(memLoad);
+
+        //button memoryPlus (M+)
+        memPlus=new JButton("M+");
+        memPlus.addActionListener(this);
+        memPlus.setFocusable(false);
+        memPlus.setToolTipText("dodaj do pamieci");
+        gbc.gridx=5;
+        gbc.gridy=3;
+        gbc.gridwidth=1;
+        gbc.ipadx=0;
+        gbc.ipady=0;
+        gbc.insets=new Insets(5,10,0,5);
+        gbl.setConstraints(memPlus,gbc);
+        c.add(memPlus);
+
+        //button memoryMinus (M-)
+        memMinus=new JButton("M-");
+        memMinus.addActionListener(this);
+        memMinus.setFocusable(false);
+        memMinus.setToolTipText("odejmij z pamieci");
+        gbc.gridx=5;
+        gbc.gridy=4;
+        gbc.gridwidth=1;
+        gbc.ipadx=0;
+        gbc.ipady=0;
+        gbc.insets=new Insets(5,10,5,5);
+        gbl.setConstraints(memMinus,gbc);
+        c.add(memMinus);
 
 
 
