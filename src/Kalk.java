@@ -1,20 +1,19 @@
-import javax.imageio.IIOException;
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 public class Kalk implements ActionListener, KeyListener
 {
     JTextField t1;
     JButton[] numericButtons = new JButton[9];
     JButton b0;
-    JButton bplus,bminus,bmul,bdiv,bpercent,bsqrt,bpow,bequal,bdot,bclear;
+    JButton bplus,bminus,bmul,bdiv,bpercent,bsqrt,bpow,bequal,bdot,bclear,bclearTextField;
     JButton memPlus,memMinus,memClear,memLoad;
     String stringToHistory="";
+    int lettersToDelete;
 
     double x, buf, memory, percentBuf;
     String mathOperation = "null";
@@ -90,6 +89,13 @@ public class Kalk implements ActionListener, KeyListener
             t1.setText("");
             t1.requestFocus();
         }
+        else if(target==bclearTextField)
+        {
+            lettersToDelete = t1.getText().length();
+            stringToHistory = stringToHistory.substring(0,stringToHistory.length()-lettersToDelete);
+            t1.setText("");
+            t1.requestFocus();
+        }
         else if(target==bplus || target==bminus || target == bmul || target == bdiv || target == bpercent ||
                 target == bpow)
         {
@@ -129,7 +135,7 @@ public class Kalk implements ActionListener, KeyListener
             if(buf>=0){
                 x=Math.sqrt(buf);
                 t1.setText(Double.toString(x));
-                stringToHistory = "√" + stringToHistory + "=" + x;
+                stringToHistory = "√" + stringToHistory + "=" + x + "\n";
             }
             else{
                 t1.setText("Error");
@@ -145,6 +151,7 @@ public class Kalk implements ActionListener, KeyListener
                 System.out.println(stringToHistory);
                 file.write(stringToHistory);
                 file.close();
+                stringToHistory = "";
             }catch(IOException exc) {
 
             }
@@ -244,7 +251,7 @@ public class Kalk implements ActionListener, KeyListener
         gbc.gridwidth=5;
         gbc.ipadx=0;
         gbc.ipady=5;
-        gbc.insets=new Insets(5,5,0,5);
+        gbc.insets=new Insets(5,5,0,0);
         gbl.setConstraints(t1,gbc);
         c.add(t1);
 
@@ -277,7 +284,21 @@ public class Kalk implements ActionListener, KeyListener
          * Initializing the rest of buttons
          */
 
-        //button CE (clear)
+        //button CE (clear text field)
+        bclearTextField = new JButton("CE");
+        bclearTextField.setToolTipText("wyczysc pole tekstowe");
+        bclearTextField.addActionListener(this);
+        bclearTextField.setFocusable(false);
+        gbc.gridx=5;
+        gbc.gridy=0;
+        gbc.gridwidth=1;
+        gbc.ipadx=0;
+        gbc.ipady=0;
+        gbc.insets=new Insets(5,10,0,5);
+        gbl.setConstraints(bclearTextField,gbc);
+        c.add(bclearTextField);
+
+        //button C (clear)
         bclear = new JButton("C");
         bclear.setToolTipText("clear");
         bclear.addActionListener(this);
