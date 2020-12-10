@@ -229,14 +229,14 @@ public class Kalk implements ActionListener, KeyListener
         //catch(Exception e){}
 
         JFrame f=new JFrame();
+        f.setFocusable(true); //This needs to be true to use KeyListener on this element
+        f.addKeyListener(this);
         Container c=f.getContentPane();
 
         GridBagLayout gbl=new GridBagLayout();
         GridBagConstraints gbc=new GridBagConstraints();
         gbc.fill=GridBagConstraints.HORIZONTAL;
         c.setLayout(gbl);
-
-        f.addKeyListener(this);
 
         /**
          * Initializing text field
